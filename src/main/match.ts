@@ -110,8 +110,7 @@ export function fuzzyMatchByWildcard(query: string, source: string): FuzzyMatchR
 export function fuzzyMatchScore(source: string, matches: number[]): number {
     const l = source.length;
     const n = matches.length;
-    const sum = matches.reduce((sum, m) => sum + m, 0);
-    return n / (sum - (n / l));
+    return matches.reduce((sum, m) => sum + n / (l + m), 0);
 }
 
 export interface FuzzyMatchResult {

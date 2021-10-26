@@ -24,8 +24,8 @@ describe('Fuzzy match', () => {
             'DOM.getInnerText',
             'Value.equalsText',
             'Value.containsText',
-            'String.extractRegexp',
             'DOM.batchExtract',
+            'String.extractRegexp',
         ]);
         assert.deepStrictEqual(results.map(r => highlight(r.source, r.matches)), [
             'dom.getTEXT',
@@ -33,8 +33,8 @@ describe('Fuzzy match', () => {
             'dom.getinnerTEXT',
             'value.equalsTEXT',
             'value.containsTEXT',
-            'sTring.EXTractregexp',
             'dom.baTchEXTract',
+            'sTring.EXTractregexp',
         ]);
     });
 

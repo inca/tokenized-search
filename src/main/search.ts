@@ -17,11 +17,13 @@ export function fuzzySearch(
     for (const [sourceIndex, source] of sources.entries()) {
         const match = fuzzyMatch(query, source, options);
         if (match.score > 0) {
+            const { score, matches } = match;
             results.push({
-                score: match.score,
-                matches: match.matches,
+                score,
+                matches,
                 source,
                 sourceIndex,
+                highlightedText: formatHighlightedText(source, matches),
             });
         }
     }
@@ -32,6 +34,13 @@ export function fuzzySearch(
             a.score > b.score ? -1 : 1;
         // (but hey, it just means "order by score desc, text asc")
     });
+}
+
+export function formatHighlightedText(source: string, matches: number[]) {
+    return source
+        .split('')
+        .map((char, i) => matches.includes(i) ? `<b>${char}</b>` : char)
+        .join('');
 }
 
 /**
@@ -54,4 +63,8 @@ export interface FuzzySearchResult {
      * An index of the source string in an initial array.
      */
     sourceIndex: number;
+    /**
+     * Highlighted text with <b> around matched tokens.
+     */
+    highlightedText: string;
 }

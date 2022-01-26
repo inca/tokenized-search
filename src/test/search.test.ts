@@ -62,7 +62,7 @@ describe('Fuzzy match', () => {
 
     it('returns highlights in text', () => {
         const results = fuzzySearch('aas', candidates);
-        assert.deepStrictEqual(results.map(r => r.highlightedText), [
+        assert.deepStrictEqual(results.map(r => r.highlight), [
             'V<b>a</b>lue.equ<b>a</b>l<b>s</b>Text',
             'V<b>a</b>lue.cont<b>a</b>in<b>s</b>Text',
         ]);

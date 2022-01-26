@@ -1,3 +1,5 @@
+import { formatHighlight } from './highlight';
+
 /**
  * Fuzzily matches `source` string against query, returning score (higher — better)
  * and indices of matched characters.
@@ -13,7 +15,7 @@
  * - `fuzzyMatchByTokens` performs matching occurring only at start of each token
  *   (i.e. start of words or word components in camelCase symbols);
  *   this algorithm doesn't try to match inside tokens (in the middle of words)
- * - `fuzzyMatchWildcard` performs a simple wildcard search
+ * - `fuzzyMatchWildcard` performs a more simplistic wildcard search
  *   (i.e. `text` -> `*t*e*x*t*`)
  *
  * Both algorithms use the same scoring system: matches that occur closer to the
@@ -23,19 +25,19 @@
  *
  * @param query Search query
  * @param source Source string (candidate) for match
- * @param options
  */
 export function fuzzyMatch(query: string, source: string, options: FuzzyMatchOptions = {}): FuzzyMatchResult {
     const { tokenScoreBias = 10 } = options;
-    const tokenMatch = fuzzyMatchByTokens(query, source);
+    const tokenMatch = fuzzyMatchByTokens(query, source, options);
     if (tokenMatch.score > 0) {
         return {
             score: tokenMatch.score * tokenScoreBias,
             matches: tokenMatch.matches,
+            highlight: tokenMatch.highlight,
         };
     }
     // Fall back to wildcard match
-    return fuzzyMatchByWildcard(query, source);
+    return fuzzyMatchByWildcard(query, source, options);
 }
 
 /**
@@ -46,7 +48,11 @@ export function fuzzyMatch(query: string, source: string, options: FuzzyMatchOpt
  * @param query Search query
  * @param source Source string (candidate) for match
  */
-export function fuzzyMatchByTokens(query: string, source: string): FuzzyMatchResult {
+export function fuzzyMatchByTokens(
+    query: string,
+    source: string,
+    options: FuzzyMatchOptions = {},
+): FuzzyMatchResult {
     // Regex is stateful and is used to advance to next token
     const regex = /[a-z][a-z0-9]*(?=[A-Z]|\b|_)|[A-Z][a-z0-9]*/g;
     // An array of indices in source string that successfully matched our query
@@ -57,7 +63,7 @@ export function fuzzyMatchByTokens(query: string, source: string): FuzzyMatchRes
     const queue = query.toLowerCase().replace(/\s+/g, '').split('');
     while (queue.length > 0) {
         if (cursor >= source.length) {
-            return { score: 0, matches: [] };
+            return { score: 0, matches: [], highlight: source };
         }
         const letter = queue[0];
         if (letter === source.charAt(cursor).toLowerCase()) {
@@ -72,7 +78,8 @@ export function fuzzyMatchByTokens(query: string, source: string): FuzzyMatchRes
         }
     }
     const score = fuzzyMatchScore(source, matches);
-    return { score, matches };
+    const highlight = formatHighlight(source, matches, options.highlightTag ?? 'b');
+    return { score, matches, highlight };
 }
 
 /**
@@ -82,7 +89,11 @@ export function fuzzyMatchByTokens(query: string, source: string): FuzzyMatchRes
  * @param query Search query
  * @param source Source string (candidate) for match
  */
-export function fuzzyMatchByWildcard(query: string, source: string): FuzzyMatchResult {
+export function fuzzyMatchByWildcard(
+    query: string,
+    source: string,
+    options: FuzzyMatchOptions = {},
+): FuzzyMatchResult {
     const matches: number[] = [];
     let fromIdx = 0;
     query = query.toLowerCase().replace(/\s+/g, '');
@@ -91,13 +102,14 @@ export function fuzzyMatchByWildcard(query: string, source: string): FuzzyMatchR
         const letter = query.charAt(i).toLowerCase();
         const idx = sourceLowercased.indexOf(letter, fromIdx);
         if (idx === -1) {
-            return { score: 0, matches: [] };
+            return { score: 0, matches: [], highlight: source };
         }
         matches.push(idx);
         fromIdx = idx + 1;
     }
     const score = fuzzyMatchScore(source, matches);
-    return { score, matches };
+    const highlight = formatHighlight(source, matches, options.highlightTag ?? 'b');
+    return { score, matches, highlight };
 }
 
 /**
@@ -116,8 +128,10 @@ export function fuzzyMatchScore(source: string, matches: number[]): number {
 export interface FuzzyMatchResult {
     score: number;
     matches: number[];
+    highlight: string;
 }
 
 export interface FuzzyMatchOptions {
     tokenScoreBias?: number;
+    highlightTag?: string;
 }

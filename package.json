@@ -1,6 +1,6 @@
 {
     "name": "tokenized-search",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Fuzzy search with bias towards matching tokens",
     "main": "out/main/index.js",
     "types": "out/main/index.d.ts",

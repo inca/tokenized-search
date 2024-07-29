@@ -27,7 +27,7 @@ import { formatHighlight } from './highlight';
  * @param source Source string (candidate) for match
  */
 export function fuzzyMatch(query: string, source: string, options: FuzzyMatchOptions = {}): FuzzyMatchResult {
-    const { tokenScoreBias = 10 } = options;
+    const { tokenScoreBias = 10, useWildcard = true } = options;
     const tokenMatch = fuzzyMatchByTokens(query, source, options);
     if (tokenMatch.score > 0) {
         return {
@@ -37,7 +37,14 @@ export function fuzzyMatch(query: string, source: string, options: FuzzyMatchOpt
         };
     }
     // Fall back to wildcard match
-    return fuzzyMatchByWildcard(query, source, options);
+    if (useWildcard) {
+        return fuzzyMatchByWildcard(query, source, options);
+    }
+    return {
+        score: 0,
+        matches: [],
+        highlight: source,
+    };
 }
 
 /**
@@ -60,7 +67,7 @@ export function fuzzyMatchByTokens(
     // An index of source string we're currently looking at
     let cursor = 0;
     // A queue of query letters to be processed
-    const queue = query.toLowerCase().replace(/\s+/g, '').split('');
+    const queue = query.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '').split('');
     while (queue.length > 0) {
         if (cursor >= source.length) {
             return { score: 0, matches: [], highlight: source };
@@ -134,4 +141,5 @@ export interface FuzzyMatchResult {
 export interface FuzzyMatchOptions {
     tokenScoreBias?: number;
     highlightTag?: string;
+    useWildcard?: boolean;
 }

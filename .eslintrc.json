@@ -1,5 +1,5 @@
 {
     "extends": [
-        "@ubio/eslint-config"
+        "@nodescript/eslint-config"
     ]
 }

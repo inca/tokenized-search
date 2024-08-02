@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { fuzzyMatch } from './match';
+import { fuzzyMatch } from './match.js';
 
 export function debugFuzzyMatch(query: string, source: string) {
     const match = fuzzyMatch(query, source);

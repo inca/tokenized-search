@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "target": "ES2022",
+        "target": "ES2020",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "strict": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
         "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
         "useDefineForClassFields": false,
+        "noImplicitOverride": true,
         "composite": true,
         "lib": ["ES2015"],
         "rootDir": "src",

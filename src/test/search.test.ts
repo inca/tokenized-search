@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { fuzzySearch } from '../main';
+import { fuzzySearch } from '../main/index.js';
 
 const candidates = [
     'DOM.getText',

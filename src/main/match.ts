@@ -1,4 +1,4 @@
-import { formatHighlight } from './highlight';
+import { formatHighlight } from './highlight.js';
 
 /**
  * Fuzzily matches `source` string against query, returning score (higher — better)
@@ -60,17 +60,28 @@ export function fuzzyMatchByTokens(
     source: string,
     options: FuzzyMatchOptions = {},
 ): FuzzyMatchResult {
-    // Regex is stateful and is used to advance to next token
-    const regex = /[a-z][a-z0-9]*(?=[A-Z]|\b|_)|[A-Z][a-z0-9]*/g;
-    // An array of indices in source string that successfully matched our query
+    const matches = matchPass(query, source, 0);
+    const score = fuzzyMatchScore(source, matches);
+    const highlight = formatHighlight(source, matches, options.highlightTag ?? 'b');
+    return { score, matches, highlight };
+}
+
+function matchPass(query: string, source: string, startPos: number) {
+    // An array of indices into source string that successfully matched our query
     const matches: number[] = [];
     // An index of source string we're currently looking at
-    let cursor = 0;
+    let cursor = startPos;
     // A queue of query letters to be processed
     const queue = query.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '').split('');
     while (queue.length > 0) {
         if (cursor >= source.length) {
-            return { score: 0, matches: [], highlight: source };
+            // Did not match all tokens, try matching again from next token
+            const nextPos = nextTokenIdx(source, startPos);
+            if (nextPos < source.length) {
+                return matchPass(query, source, nextPos);
+            }
+            // No luck
+            return [];
         }
         const letter = queue[0];
         if (letter === source.charAt(cursor).toLowerCase()) {
@@ -79,14 +90,17 @@ export function fuzzyMatchByTokens(
             cursor += 1;
             queue.shift();
         } else {
-            // No match: jump to next token, letter stays the same
-            const m = regex.exec(source);
-            cursor = m == null ? source.length : m.index;
+            cursor = nextTokenIdx(source, cursor);
         }
     }
-    const score = fuzzyMatchScore(source, matches);
-    const highlight = formatHighlight(source, matches, options.highlightTag ?? 'b');
-    return { score, matches, highlight };
+    return matches;
+}
+
+export function nextTokenIdx(source: string, startPos: number): number {
+    const re = /(?:[a-z0-9]+(?=[A-Z]|\b|_)|[A-Z][a-z0-9]*)[^a-zA-Z0-9]*/g;
+    re.lastIndex = startPos;
+    const m = re.exec(source);
+    return m == null ? source.length : m.index + m[0].length;
 }
 
 /**

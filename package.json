@@ -2,6 +2,11 @@
     "name": "tokenized-search",
     "version": "1.1.0",
     "description": "Fuzzy search with bias towards matching tokens",
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        ".": "./out/main/index.js"
+    },
     "main": "out/main/index.js",
     "types": "out/main/index.d.ts",
     "files": [
@@ -9,7 +14,7 @@
     ],
     "scripts": {
         "clean": "rm -rf out *.tsbuildinfo",
-        "dev": "tsc -b -w",
+        "dev": "npm run clean && tsc -b -w",
         "compile": "tsc -b",
         "lint": "eslint . --cache",
         "test": "NODE_ENV=test mocha",

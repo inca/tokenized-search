@@ -1,4 +1,4 @@
-import { fuzzyMatch, FuzzyMatchOptions } from './match';
+import { fuzzyMatch, FuzzyMatchOptions } from './match.js';
 
 /**
  * Fuzzy search candidates using fuzzy match algorithm (see `fuzzyMatch`).

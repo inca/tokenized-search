@@ -19,6 +19,7 @@ describe('Fuzzy match', () => {
         assert.strictEqual(nextTokenIdx('get_text', 0), 4);
         assert.strictEqual(nextTokenIdx('get-text', 0), 4);
         assert.strictEqual(nextTokenIdx('Get / Text', 0), 6);
+        assert.strictEqual(nextTokenIdx('Get / Text', 3), 6);
         assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 0), 6);
         assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 1), 6);
         assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 6), 12);
@@ -48,8 +49,21 @@ describe('Fuzzy match', () => {
             { query: 'text', source: 'No match', matches: [] },
         ],
         'match second token': [
-            { query: 'map', source: 'Math / Map Range', matches: [7, 8, 9], useWildcard: false }
-        ]
+            {
+                query: 'map',
+                source: 'Math / Map Range',
+                matches: [7, 8, 9],
+                useWildcard: false,
+            },
+        ],
+        'match both tokens': [
+            {
+                query: 'mathmap',
+                source: 'Math / Map Range',
+                matches: [0, 1, 2, 3, 7, 8, 9],
+                useWildcard: false,
+            },
+        ],
     };
 
     for (const [title, cases] of Object.entries(suite)) {

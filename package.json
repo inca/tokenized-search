@@ -1,6 +1,6 @@
 {
     "name": "tokenized-search",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "Fuzzy search with bias towards matching tokens",
     "type": "module",
     "sideEffects": false,

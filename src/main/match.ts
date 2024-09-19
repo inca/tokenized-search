@@ -73,7 +73,7 @@ export function fuzzyMatch(
         }
         const matches = algo.matcher(query, source);
         if (matches.length > 0) {
-            const score = fuzzyMatchScore(source, matches);
+            const score = fuzzyMatchScore(matches);
             const highlight = formatHighlight(source, matches, options.highlightTag ?? 'b');
             return {
                 score: score * bias,
@@ -237,8 +237,7 @@ export function matchWildcard(
  * @param source Source string
  * @param matches Array of indices in source string indicated matched characters
  */
-export function fuzzyMatchScore(source: string, matches: number[]): number {
-    const l = source.length;
+export function fuzzyMatchScore(matches: number[]): number {
     const n = matches.length;
-    return matches.reduce((sum, m) => sum + n / (l + m), 0);
+    return matches.reduce((sum, m) => sum + n / (1 + m), 0);
 }

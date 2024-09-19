@@ -1,67 +1,61 @@
 import assert from 'assert';
 
-import { fuzzyMatch, nextTokenIdx } from '../main/index.js';
+import { fuzzyMatch, FuzzyMatchOptions } from '../main/index.js';
 
 interface TestCase {
-    query: string;
-    source: string;
-    matches: number[];
-    useWildcard?: boolean;
+    q: string;
+    s: string;
+    m: number[];
+    options?: FuzzyMatchOptions;
 }
 
 describe('Fuzzy match', () => {
 
-    it('nextTokenIdx', () => {
-        assert.strictEqual(nextTokenIdx('getText', 0), 3);
-        assert.strictEqual(nextTokenIdx('getText', 1), 3);
-        assert.strictEqual(nextTokenIdx('getText', 3), 7);
-        assert.strictEqual(nextTokenIdx('get text', 0), 4);
-        assert.strictEqual(nextTokenIdx('get_text', 0), 4);
-        assert.strictEqual(nextTokenIdx('get-text', 0), 4);
-        assert.strictEqual(nextTokenIdx('Get / Text', 0), 6);
-        assert.strictEqual(nextTokenIdx('Get / Text', 3), 6);
-        assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 0), 6);
-        assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 1), 6);
-        assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 6), 12);
-        assert.strictEqual(nextTokenIdx('Get / AccessToken / Retry', 12), 20);
-    });
-
     const suite: Record<string, TestCase[]> = {
         'match whole words': [
-            { query: 'text', source: 'getText', matches: [3, 4, 5, 6] },
-            { query: 'text', source: 'get-text', matches: [4, 5, 6, 7] },
-            { query: 'text', source: 'get_text', matches: [4, 5, 6, 7] },
-            { query: 'text', source: 'Get Text', matches: [4, 5, 6, 7] },
-            { query: 'text', source: 'no match', matches: [] },
+            { q: 'text', s: 'getText', m: [3, 4, 5, 6] },
+            { q: 'text', s: 'get-text', m: [4, 5, 6, 7] },
+            { q: 'text', s: 'get_text', m: [4, 5, 6, 7] },
+            { q: 'text', s: 'Get Text', m: [4, 5, 6, 7] },
+            { q: 'text', s: 'no match', m: [] },
         ],
         'match the beginning of tokens': [
-            { query: 'gt', source: 'getText', matches: [0, 3] },
-            { query: 'gt', source: 'get-text', matches: [0, 4] },
-            { query: 'gt', source: 'get_text', matches: [0, 4] },
-            { query: 'gt', source: 'Get Text', matches: [0, 4] },
-            { query: 'gt', source: 'no match', matches: [] },
+            { q: 'gt', s: 'getText', m: [0, 3] },
+            { q: 'gt', s: 'get-text', m: [0, 4] },
+            { q: 'gt', s: 'get_text', m: [0, 4] },
+            { q: 'gt', s: 'Get Text', m: [0, 4] },
+            { q: 'gt', s: 'no match', m: [] },
         ],
         'match wildcard': [
-            { query: 'text', source: 'batchExtract', matches: [2, 5, 6, 7] },
-            { query: 'text', source: 'batch-extract', matches: [2, 6, 7, 8] },
-            { query: 'text', source: 'batch_extract', matches: [2, 6, 7, 8] },
-            { query: 'text', source: 'Batch Extract', matches: [2, 6, 7, 8] },
-            { query: 'text', source: 'No match', matches: [] },
+            { q: 'text', s: 'batchExtract', m: [2, 5, 6, 7] },
+            { q: 'text', s: 'batch-extract', m: [2, 6, 7, 8] },
+            { q: 'text', s: 'batch_extract', m: [2, 6, 7, 8] },
+            { q: 'text', s: 'Batch Extract', m: [2, 6, 7, 8] },
+            { q: 'text', s: 'No match', m: [] },
         ],
         'match second token': [
             {
-                query: 'map',
-                source: 'Math / Map Range',
-                matches: [7, 8, 9],
-                useWildcard: false,
+                q: 'map',
+                s: 'Math / Map Range',
+                m: [7, 8, 9],
+                options: {
+                    biasWildcard: 0,
+                }
             },
+        ],
+        'match tokens is lenient order': [
+            { q: 'list last order', s: 'Get Last Orders', m: [4, 5, 6, 7, 9, 10, 11, 12, 13] },
+            { q: 'get youtube video', s: 'youtube_list_videos', m: [0, 1, 2, 3, 4, 5, 6, 13, 14, 15, 16, 17] },
+            { q: 'get youtube video', s: 'YouTube List Videos', m: [0, 1, 2, 3, 4, 5, 6, 13, 14, 15, 16, 17] },
         ],
         'match both tokens': [
             {
-                query: 'mathmap',
-                source: 'Math / Map Range',
-                matches: [0, 1, 2, 3, 7, 8, 9],
-                useWildcard: false,
+                q: 'mathmap',
+                s: 'Math / Map Range',
+                m: [0, 1, 2, 3, 7, 8, 9],
+                options: {
+                    biasWildcard: 0,
+                }
             },
         ],
     };
@@ -69,13 +63,11 @@ describe('Fuzzy match', () => {
     for (const [title, cases] of Object.entries(suite)) {
         describe(title, () => {
             for (const testCase of cases) {
-                const match = testCase.matches.length > 0;
+                const match = testCase.m.length > 0;
                 const sym = match ? '✓' : '✗';
-                it(`${sym} ${testCase.query} -> ${testCase.source}`, () => {
-                    const res = fuzzyMatch(testCase.query, testCase.source, {
-                        useWildcard: testCase.useWildcard,
-                    });
-                    assert.deepStrictEqual(res.matches, testCase.matches);
+                it(`${sym} ${testCase.q} -> ${testCase.s}`, () => {
+                    const res = fuzzyMatch(testCase.q, testCase.s, testCase.options);
+                    assert.deepStrictEqual(res.matches, testCase.m);
                     assert(match ? res.score > 0 : res.score === 0);
                 });
             }
